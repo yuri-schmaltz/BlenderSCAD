@@ -43,7 +43,7 @@ def main():
     # $fn - number of fragments  | override of $fa/$fs , default = 0 , example: 36-> every 10 degrees
     fn = 0
     if bpy.context.active_object is not None:
-        if bpy.context.active_object.mode is not "OBJECT":
+        if bpy.context.active_object.mode != "OBJECT":
             bpy.ops.object.mode_set(mode="OBJECT")
 
 

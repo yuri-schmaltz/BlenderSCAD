@@ -5,7 +5,10 @@
 #
 
 import bpy
+import logging
 import blenderscad
+
+logger = logging.getLogger(__name__)
 
 # from blenderscad import *  # contains blenderscad core, primitives, math and colors
 
@@ -28,7 +31,7 @@ def import_stl(file, layer="", convexity=10):
 
 # helper to fill imported dxf -> before linear extrude?
 def fill_object(o):
-    if bpy.context.active_object.mode is not "EDIT":
+    if bpy.context.active_object.mode != "EDIT":
         bpy.ops.object.mode_set(mode="EDIT")
     for el in o.data.vertices:
         el.select = True
@@ -50,7 +53,7 @@ def import_dxf(file, layer="", convexity=10, fill=True):
 
     io_import_scene_dxf.theCodec = "ascii"
     sections = io_import_scene_dxf.readDxfFile(file)
-    print("Building geometry")
+    logger.info("Building geometry")
     io_import_scene_dxf.buildGeometry(sections["ENTITIES"].data)
     o = bpy.context.scene.objects.active
     if fill is True:
@@ -160,7 +163,7 @@ def surface(file, center=False, convexity=1):
             data.append(row)
             rows += 1
     ins.close()
-    print("importing surface ", file, ": rows=", rows, " cols=", cols)
+    logger.info("importing surface %s: rows=%s cols=%s", file, rows, cols)
     ox = -(cols - 1) / 2.0 if center else 0
     oy = -(rows - 1) / 2.0 if center else 0
     #
