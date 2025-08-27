@@ -4,12 +4,13 @@
 ## by Michael Mlivoncic, 2013
 #
 import bpy
-
-# import bpy_types
+import logging
 
 from mathutils import Vector
 
 import blenderscad  # for "global" variables fn, defColor,...
+
+logger = logging.getLogger(__name__)
 
 # from blenderscad.math import *  # true, false required...
 
@@ -222,7 +223,7 @@ def polygon(points, paths=[], fill=True):
     bpy.context.scene.objects.active = o
     o.select = True
     # Note: switching mode would fail before mesh is defined and object selected...
-    if bpy.context.active_object.mode is not "EDIT":
+    if bpy.context.active_object.mode != "EDIT":
         bpy.ops.object.mode_set(mode="EDIT")
     # 	for el in o.data.vertices: el.select = True
     # 	for el in o.data.edges: el.select = True
@@ -280,7 +281,7 @@ def square(size=(1.0, 1.0), center=False, fill=False):
 # DEPRECATED: polyhedron(triangles=[]) will be removed in future releases. Use polyhedron(faces=[]) instead
 def polyhedron(points, faces=[], triangles=[], fill=False):
     if len(triangles) > 0 and len(faces) == 0:
-        print(
+        logger.warning(
             "DEPRECATED: polyhedron(triangles=[]) will be removed in future releases. Use polyhedron(faces=[]) instead"
         )
         faces = triangles
@@ -306,7 +307,7 @@ def polyhedron(points, faces=[], triangles=[], fill=False):
     bpy.context.scene.objects.active = o
     o.select = True
     # Note: switching mode would fail before mesh is defined and object selected...
-    if bpy.context.active_object.mode is not "EDIT":
+    if bpy.context.active_object.mode != "EDIT":
         bpy.ops.object.mode_set(mode="EDIT")
     for el in o.data.vertices:
         el.select = True

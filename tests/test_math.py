@@ -1,10 +1,11 @@
 import sys
 import types
 
-sys.modules.setdefault("bpy", types.ModuleType("bpy"))
+import pytest
 
-import blenderscad.math as bmath
-import blenderscad.colors as colors
+sys.modules.setdefault("bpy", types.ModuleType("bpy"))
+import blenderscad.math as bmath  # noqa: E402,I001
+import blenderscad.colors as colors  # noqa: E402,I001
 
 
 def test_rands_repeatable():
@@ -18,3 +19,10 @@ def test_lookup_exact_match():
 
 def test_color_constant():
     assert colors.red == (1.0, 0.0, 0.0, 0)
+
+
+def test_inverse_trig_functions():
+    assert bmath.acos(1) == 0
+    assert bmath.asin(0) == 0
+    assert bmath.atan(1) == pytest.approx(45)
+    assert bmath.atan2(1, 1) == pytest.approx(45)

@@ -19,6 +19,28 @@ true = True
 false = False
 pi = math.pi  # 3.141592
 
+__all__ = [
+    "true",
+    "false",
+    "pi",
+    "sin",
+    "cos",
+    "tan",
+    "acos",
+    "asin",
+    "atan",
+    "atan2",
+    "sign",
+    "rands",
+    "lookup",
+    "ceil",
+    "exp",
+    "floor",
+    "ln",
+    "log",
+    "sqrt",
+]
+
 
 def sin(deg):
     return math.sin(math.radians(deg))
@@ -32,20 +54,20 @@ def tan(deg):
     return math.tan(math.radians(deg))
 
 
-def acos(deg):
-    return math.acos(math.radians(deg))
+def acos(x):
+    return math.degrees(math.acos(x))
 
 
-def asin(deg):
-    return math.asin(math.radians(deg))
+def asin(x):
+    return math.degrees(math.asin(x))
 
 
-def atan(deg):
-    return math.atan(math.radians(deg))
+def atan(x):
+    return math.degrees(math.atan(x))
 
 
-def atan2(deg):
-    return math.atan2(math.radians(deg))
+def atan2(y, x):
+    return math.degrees(math.atan2(y, x))
 
 
 def sign(x):

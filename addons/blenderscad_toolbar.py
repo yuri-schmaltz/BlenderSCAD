@@ -36,6 +36,7 @@ import os
 # uncomment the following two lines to the path where your "blenderscad" module folder will be
 # (other than Blender's default location for modules)
 import sys
+import logging
 
 
 settings = {}
@@ -69,7 +70,9 @@ rel = [
 ]
 for mo in rel:
     if mo in sys.modules:
-        print("reloading: " + mo + " -> " + sys.modules[mo].__file__)
+        logging.getLogger(__name__).info(
+            "reloading: %s -> %s", mo, sys.modules[mo].__file__
+        )
         importlib.reload(sys.modules[mo])
 ########################
 
@@ -372,7 +375,7 @@ class VIEW3D_OT_blenderscad_debug(bpy.types.Operator):
 
     def execute(self, context):
         o = context.object
-        if bpy.context.active_object.mode is not "OBJECT":
+        if bpy.context.active_object.mode != "OBJECT":
             bpy.ops.object.mode_set(mode="OBJECT")
         o.show_wire = False if o.show_wire else True
         o.show_all_edges = True

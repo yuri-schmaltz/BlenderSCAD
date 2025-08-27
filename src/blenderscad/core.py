@@ -41,11 +41,14 @@ import bpy
 import bpy_types
 
 import sys
+import logging
 
 import math
 from mathutils import Vector  # using Vector type below...
 
 import blenderscad  # for "global" variables fn, defColor,...
+
+logger = logging.getLogger(__name__)
 
 # from blenderscad.math import *  # true, false required...
 
@@ -86,7 +89,7 @@ def get_fragments_from_r(r, fn=None, fs=None, fa=None):
 def clearAllObjects():
     bpy.ops.object.select_all()
     if bpy.context.active_object is not None:
-        if bpy.context.active_object.mode is not "OBJECT":
+        if bpy.context.active_object.mode != "OBJECT":
             bpy.ops.object.mode_set(mode="OBJECT")
     # fix: also remove not selectable objects from scene
     # bpy.ops.object.select_all()
@@ -94,11 +97,11 @@ def clearAllObjects():
     for o in bpy.context.scene.objects:
         if o.type == "MESH":
             mesh = o.data
-            bpy.context.scene.objects.unlink(o)
+            bpy.context.scene.collection.objects.unlink(o)
             bpy.data.objects.remove(o)
             bpy.data.meshes.remove(mesh)
         else:
-            bpy.context.scene.objects.unlink(o)
+            bpy.context.scene.collection.objects.unlink(o)
             bpy.data.objects.remove(o)
 
 
@@ -109,7 +112,7 @@ def clearAllObjects():
 # list all Blender objects for debugging purposes
 def listAllObjects():
     for obj in bpy.data.objects:
-        print(obj.name)
+        logger.debug(obj.name)
 
 
 #########################################3
@@ -186,7 +189,7 @@ def color(rgba=(1.0, 1.0, 1.0, 0), o=None):
             color(rgba, c)
         return o
         # -> NO colorization to bsgroup object..
-    if bpy.context.active_object.mode is not "OBJECT":
+    if bpy.context.active_object.mode != "OBJECT":
         bpy.ops.object.mode_set(mode="OBJECT")
     # ensure we have already assigned a material.
     if (
@@ -443,7 +446,7 @@ def split(o=None):
         o = bpy.context.scene.objects.active
     else:
         bpy.context.scene.objects.active = o
-    if bpy.context.active_object.mode is not "EDIT":
+    if bpy.context.active_object.mode != "EDIT":
         bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.separate(type="LOOSE")
     bpy.ops.object.mode_set(mode="OBJECT")
@@ -479,7 +482,7 @@ def group(o1, *objs):
     bpy.ops.mesh.primitive_cube_add(
         location=(0.0, 0.0, 0.0), layers=blenderscad.mylayers
     )
-    if bpy.context.active_object.mode is not "OBJECT":
+    if bpy.context.active_object.mode != "OBJECT":
         bpy.ops.object.mode_set(mode="OBJECT")
     bb = (
         bpy.context.active_object
@@ -554,12 +557,12 @@ def group(o1, *objs):
 
 # reverse effect of ungroup
 def ungroup(root=None):
-    if bpy.context.active_object.mode is not "OBJECT":
+    if bpy.context.active_object.mode != "OBJECT":
         bpy.ops.object.mode_set(mode="OBJECT")
     if root is None:
         root = bpy.context.scene.objects.active
     if len(root.children) == 0:  # Extra: if no children, try to split on "mesh"-level:
-        print("nothing to ungroup, trying to split up at mesh-level")
+        logger.info("nothing to ungroup, trying to split up at mesh-level")
         return split(root)
     objs = root.children
     bpy.ops.object.select_all(action="DESELECT")
@@ -574,9 +577,9 @@ def ungroup(root=None):
         bpy.context.scene.objects.active = obj
         bpy.ops.object.parent_clear(type="CLEAR_KEEP_TRANSFORM")
     ## remove root
-    print(root)
+    logger.debug(root)
     mesh = root.data
-    bpy.context.scene.objects.unlink(root)
+    bpy.context.scene.collection.objects.unlink(root)
     bpy.data.objects.remove(root)
     bpy.data.meshes.remove(mesh)
     return objs[0]
@@ -585,7 +588,7 @@ def ungroup(root=None):
 # Tinkercad like: Toggle status of "hole" for a given object.
 # subsequent "group" will treat holes differently: difference() instead of union()-like
 def hole(obj):
-    print("blenderscad.core.hole(): not yet implemented")
+    logger.warning("blenderscad.core.hole(): not yet implemented")
     return obj
 
 
@@ -706,11 +709,11 @@ def destruct(o):
     ######################################
     if o.type == "MESH":
         mesh = o.data
-        bpy.context.scene.objects.unlink(o)
+        bpy.context.scene.collection.objects.unlink(o)
         bpy.data.objects.remove(o)
         bpy.data.meshes.remove(mesh)
     else:
-        bpy.context.scene.objects.unlink(o)
+        bpy.context.scene.collection.objects.unlink(o)
         bpy.data.objects.remove(o)
     ######################################
     return True
@@ -733,7 +736,7 @@ def remesh(o=None, apply=True):
     rem.use_smooth_shade = False
     rem.use_remove_disconnected = True
     # often forgotten: needs to be active!! bpy.context.scene.objects.active = o
-    if bpy.context.active_object.mode is not "OBJECT":
+    if bpy.context.active_object.mode != "OBJECT":
         bpy.ops.object.mode_set(mode="OBJECT")
     if apply == True:
         bpy.ops.object.modifier_apply(apply_as="DATA", modifier="Remesh")
@@ -757,7 +760,7 @@ def decimate(o=None, apply=True):
     # de.angle_limit = 0
     de.iterations = 4
     # often forgotten: needs to be active!! bpy.context.scene.objects.active = o
-    if bpy.context.active_object.mode is not "OBJECT":
+    if bpy.context.active_object.mode != "OBJECT":
         bpy.ops.object.mode_set(mode="OBJECT")
     if apply == True:
         bpy.ops.object.modifier_apply(apply_as="DATA", modifier="MyDecimate")
@@ -772,7 +775,7 @@ def dissolve(o=None):
         o = bpy.context.scene.objects.active
     else:
         bpy.context.scene.objects.active = o
-    if bpy.context.active_object.mode is not "EDIT":
+    if bpy.context.active_object.mode != "EDIT":
         bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.select_all(action="SELECT")
     # Dissolve selected edges and verts, limited by the angle of surrounding geometry
@@ -787,7 +790,7 @@ def dissolve(o=None):
 # found: http://yorik.uncreated.net/guestblog.php?2013=314
 def deletePolygon(obj, faceIdx):
     # obj = bpy.context.active_object
-    if bpy.context.active_object.mode is not "EDIT":
+    if bpy.context.active_object.mode != "EDIT":
         bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.select_all(action="DESELECT")
     bpy.ops.object.mode_set(mode="OBJECT")
@@ -869,7 +872,7 @@ def cleanup_object(
         o = bpy.context.scene.objects.active
     else:
         bpy.context.scene.objects.active = o
-    if bpy.context.active_object.mode is not "EDIT":
+    if bpy.context.active_object.mode != "EDIT":
         bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.select_all(action="SELECT")
     if removeDoubles:
@@ -900,7 +903,7 @@ def cleanup_object(
     # convert nGons to triangles
     #
     # return to object mode
-    if bpy.context.active_object.mode is not "OBJECT":
+    if bpy.context.active_object.mode != "OBJECT":
         bpy.ops.object.mode_set(mode="OBJECT")
     # bpy.context.active_object.data.update(calc_edges=True, calc_tessface=True)
     bpy.context.scene.update()
@@ -938,7 +941,7 @@ def booleanOp(objA, objB, boolOp="DIFFERENCE", apply=True):
     if apply is True:
         bpy.ops.object.modifier_apply(apply_as="DATA", modifier="MyBool")
         mesh = objB.data
-        bpy.context.scene.objects.unlink(objB)
+        bpy.context.scene.collection.objects.unlink(objB)
         bpy.data.objects.remove(objB)
         bpy.data.meshes.remove(mesh)
     else:
@@ -1098,7 +1101,7 @@ def hull(o1, *objs):
     o = union(o1, *objs)
     bpy.context.scene.objects.active = o
     o.select = True
-    if bpy.context.active_object.mode is not "EDIT":
+    if bpy.context.active_object.mode != "EDIT":
         bpy.ops.object.mode_set(mode="EDIT")
     # print("VERTICES: *********")
     # for v in o.data.vertices:
@@ -1121,7 +1124,7 @@ def hull(o1, *objs):
     # join_triangles (boolean, (optional)) – Join Triangles, Merge adjacent triangles into quads
     # limit (float in [0, 3.14159], (optional)) – Max Angle, Angle Limit
     bpy.ops.mesh.remove_doubles()
-    if bpy.context.active_object.mode is not "OBJECT":
+    if bpy.context.active_object.mode != "OBJECT":
         bpy.ops.object.mode_set(mode="OBJECT")
     o.name = "hull(" + o.name + ")"
     o.data.name = "hull(" + o.data.name + ")"
@@ -1143,7 +1146,7 @@ def cut(
         o = bpy.context.scene.objects.active
     else:
         bpy.context.scene.objects.active = o
-    if bpy.context.active_object.mode is not "EDIT":
+    if bpy.context.active_object.mode != "EDIT":
         bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.bisect(
         plane_co=plane_co,
@@ -1168,7 +1171,7 @@ def projection(o=None, cut=False):
     else:
         bpy.context.scene.objects.active = o
     if cut:
-        if bpy.context.active_object.mode is not "EDIT":
+        if bpy.context.active_object.mode != "EDIT":
             bpy.ops.object.mode_set(mode="EDIT")
         bpy.ops.mesh.bisect(
             plane_co=(0.0, 0.0, 0.0),
@@ -1179,7 +1182,7 @@ def projection(o=None, cut=False):
             threshold=0.00000,
         )
         bpy.ops.mesh.flip_normals()  # blender treats normals the other way around than OpenSCAD...
-        if bpy.context.active_object.mode is not "OBJECT":
+        if bpy.context.active_object.mode != "OBJECT":
             bpy.ops.object.mode_set(mode="OBJECT")
     else:  # if cut is False:
         # "Flatten" whole object to zero in Z-Axis -> almost projection
@@ -1190,7 +1193,7 @@ def projection(o=None, cut=False):
             scale=True, location=True
         )  # Apply the object’s transformation to its data
         ###### deselcting all meshes first...
-        if bpy.context.active_object.mode is not "EDIT":
+        if bpy.context.active_object.mode != "EDIT":
             bpy.ops.object.mode_set(mode="EDIT")
         bpy.ops.mesh.select_all(action="DESELECT")
         bpy.context.tool_settings.mesh_select_mode = [
@@ -1217,8 +1220,8 @@ def projection(o=None, cut=False):
     # 	if cut is False:
     # 		#blenderscad.core.cleanup_object(o=o,removeDoubles=True,subdivide=False, normalsRecalcOut=True)
     # 		#blenderscad.core.remove_duplicates()
-    print("num vertices: " + str(len(o.data.vertices)))
-    print("num polygons: " + str(len(o.data.polygons)))
+    logger.debug("num vertices: %s", len(o.data.vertices))
+    logger.debug("num polygons: %s", len(o.data.polygons))
     return o
 
 
@@ -1237,7 +1240,7 @@ def linear_extrude(height, o=None, center=True, convexity=-1, twist=0):
     # TODO: center object...
     # bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
     # bpy.context.scene.cursor_location = (5,5,0)
-    if bpy.context.active_object.mode is not "EDIT":
+    if bpy.context.active_object.mode != "EDIT":
         bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.select_all(action="SELECT")
     bpy.ops.mesh.extrude_region_move(
@@ -1245,7 +1248,7 @@ def linear_extrude(height, o=None, center=True, convexity=-1, twist=0):
     )
     # bpy.ops.mesh.extrude_region_move(MESH_OT_extrude=None, TRANSFORM_OT_translate=None)
     # TODO: causes a "convertViewVec: called in an invalid context"
-    if bpy.context.active_object.mode is not "OBJECT":
+    if bpy.context.active_object.mode != "OBJECT":
         bpy.ops.object.mode_set(mode="OBJECT")
     if twist != 0:
         mod1 = o.modifiers.new("Mod1", "SIMPLE_DEFORM")
@@ -1287,7 +1290,7 @@ def rotate_extrude(o=None, fn=None, fs=None, fa=None):
     newz = o.location[1]  # z-Offset of the final object...
     o.location[1] = 0.0
     rotate([90, 0, 0], o)  # emulating OpenSCAD: assumes 2D object in X-Y-Plane...
-    if bpy.context.active_object.mode is not "EDIT":
+    if bpy.context.active_object.mode != "EDIT":
         bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.select_all(action="SELECT")
     prevAreaType = bpy.context.area.type  # TEXT_EDITOR or CONSOLE
@@ -1326,7 +1329,7 @@ def rotate_extrude(o=None, fn=None, fs=None, fa=None):
     # bpy.ops.mesh.remove_doubles()
     bpy.context.area.type = prevAreaType  # restore area / context
     # bpy.ops.mesh.normals_make_consistent(inside=False)
-    if bpy.context.active_object.mode is not "OBJECT":
+    if bpy.context.active_object.mode != "OBJECT":
         bpy.ops.object.mode_set(mode="OBJECT")
     o.location[2] += newz
     o.name = "re(" + o.name + ")"
@@ -1366,7 +1369,7 @@ def round_edges(
         o = bpy.context.scene.objects.active
     else:
         bpy.context.scene.objects.active = o
-    if bpy.context.active_object.mode is not "OBJECT":
+    if bpy.context.active_object.mode != "OBJECT":
         bpy.ops.object.mode_set(mode="OBJECT")
     # bpy.ops.object.select_all(action = 'DESELECT')
     # o.select = True
